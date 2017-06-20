@@ -1,68 +1,59 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using RDCManOctopus.Rdg;
+using RDCManOctopus.Repositories;
 using RemoteDesktopConnectionManagerOctopus.Entities;
+using Environment = RemoteDesktopConnectionManagerOctopus.Entities.Environment;
 
 namespace RDCManOctopus
 {
 	internal static class Program
 	{
+		private static IConfigurationRoot Configuration { get; set; }
+
 		private static void Main()
 		{
-			var environmentsJson = File.ReadAllText("./Data/environments.json", Encoding.UTF8);
-			var machinesJson = File.ReadAllText("./Data/machines.json", Encoding.UTF8);
+			BuildConfiguration();
 
-			var environments = JsonConvert.DeserializeObject<IList<Environment>>(environmentsJson);
-			var machines = JsonConvert.DeserializeObject<IList<Machine>>(machinesJson);
+			var repositories = new RepositoryCollection();
+			repositories.AddRepository(new WebRepository(Configuration["WebRepository:HostName"]));
+			repositories.AddRepository(new FileRepository(Configuration["FileRepository:DataPath"]));
 
-			const string name = "Octopus";
-			var xml = BuildXml(name, environments, machines);
+			var environmentsJson = repositories.GetEnvironments();
+			var machinesJson = repositories.GetMachines();
 
-			File.WriteAllText($"{name}.rdg", xml, Encoding.UTF8);
-		}
-
-		private static string BuildXml(string name, IList<Environment> environments, IList<Machine> machines)
-		{
-			var content = new StringBuilder();
-			content.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-			content.AppendLine("<RDCMan programVersion=\"2.7\" schemaVersion=\"3\">");
-			content.AppendLine("\t<file>");
-			content.AppendLine("\t\t<credentialsProfiles />");
-			content.AppendLine("\t\t<properties>");
-			content.AppendLine("\t\t\t<expanded>True</expanded>");
-			content.AppendLine($"\t\t\t<name>{name}</name>");
-			content.AppendLine("\t\t</properties>");
-
-			foreach (var environment in environments)
+			var success = false;
+			try
 			{
-				content.AppendLine("\t\t<group>");
-				content.AppendLine("\t\t\t<properties>");
-				content.AppendLine("\t\t\t\t<expanded>False</expanded>");
-				content.AppendLine($"\t\t\t\t<name>{environment.Name}</name>");
-				content.AppendLine("\t\t\t</properties>");
+				var environments = JsonConvert.DeserializeObject<IList<Environment>>(environmentsJson);
+				var machines = JsonConvert.DeserializeObject<IList<Machine>>(machinesJson);
 
-				foreach (var machine in machines.Where(m => m.EnvironmentIds.Contains(environment.Id)))
-				{
-					content.AppendLine("\t\t\t<server>");
-					content.AppendLine("\t\t\t\t<properties>");
-					content.AppendLine($"\t\t\t\t\t<displayName>{machine.Name} ({string.Join(", ", machine.Roles)})</displayName>");
-					content.AppendLine($"\t\t\t\t\t<name>{machine.Uri.DnsSafeHost}</name>");
-					content.AppendLine("\t\t\t\t</properties>");
-					content.AppendLine("\t\t\t</server>");
-				}
+				var xml = RdgBuilder.BuildXml(Configuration["Name"], environments, machines);
 
-				content.AppendLine("\t\t</group>");
+				File.WriteAllText($"{Configuration["Name"]}.rdg", xml, Encoding.UTF8);
+				success = true;
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
 			}
 
-			content.AppendLine("\t</file>");
-			content.AppendLine("\t<connected />");
-			content.AppendLine("\t<favorites />");
-			content.AppendLine("\t<recentlyUsed />");
-			content.AppendLine("</RDCMan>");
+			Console.WriteLine("File creation {0}", success ? "successful!" : "failed.");
 
-			return content.ToString();
+			Console.WriteLine("Press any key to exit...");
+			Console.ReadLine();
+		}
+
+		private static void BuildConfiguration()
+		{
+			var configurationBuilder = new ConfigurationBuilder()
+				.SetBasePath(Directory.GetCurrentDirectory())
+				.AddJsonFile("appsettings.json");
+			Configuration = configurationBuilder.Build();
 		}
 	}
 }
