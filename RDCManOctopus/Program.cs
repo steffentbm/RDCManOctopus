@@ -11,8 +11,8 @@ namespace RDCManOctopus
 	{
 		private static void Main()
 		{
-			var environmentsJson = File.ReadAllText("./Data/environments.json", Encoding.UTF8);		// From http://octopus.waypoint-toolbox/api/environments/all
-			var machinesJson = File.ReadAllText("./Data/machines.json", Encoding.UTF8);				// From http://octopus.waypoint-toolbox/api/machines/all
+			var environmentsJson = File.ReadAllText("./Data/environments.json", Encoding.UTF8);
+			var machinesJson = File.ReadAllText("./Data/machines.json", Encoding.UTF8);
 
 			var environments = JsonConvert.DeserializeObject<IList<Environment>>(environmentsJson);
 			var machines = JsonConvert.DeserializeObject<IList<Machine>>(machinesJson);
