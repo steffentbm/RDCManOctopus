@@ -11,11 +11,11 @@ using Environment = RemoteDesktopConnectionManagerOctopus.Entities.Environment;
 
 namespace RDCManOctopus
 {
-	internal static class Program
+	public static class Program
 	{
-		private static IConfigurationRoot Configuration { get; set; }
+		public static IConfigurationRoot Configuration { get; set; }
 
-		private static void Main()
+		public static void Main()
 		{
 			BuildConfiguration();
 
