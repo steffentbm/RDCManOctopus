@@ -9,7 +9,7 @@ There are currently two repositories implemented:
 Configurations for both repositories can be set in the **appsettings.json** file.
 
 ## Usage
-1. Update **appsettings.json** with the Octopus hostname
+1. Update **appsettings.json** with the Octopus hostname and [Octopus API key](https://github.com/OctopusDeploy/OctopusDeploy-Api/wiki/Authentication)
 2. *Optionally: Save the data from your Octopus Deploy API to json files in the Data directory*
 	1. environments.json
 	2. machines.json
