@@ -27,7 +27,7 @@ namespace RDCManOctopus.Rdg
 				content.AppendLine($"\t\t\t\t<name>{environment.Name}</name>");
 				content.AppendLine("\t\t\t</properties>");
 
-				foreach (var machine in machines.Where(m => m.EnvironmentIds.Contains(environment.Id)))
+				foreach (var machine in machines.Where(m => m.EnvironmentIds.Contains(environment.Id) && m.Uri != null))
 				{
 					content.AppendLine("\t\t\t<server>");
 					content.AppendLine("\t\t\t\t<properties>");
